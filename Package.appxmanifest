@@ -4,10 +4,10 @@
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   IgnorableNamespaces="uap mp">
-  <Identity Name="LearnComposition.App" Publisher="CN=millfi" Version="1.0.0.0" />
-  <mp:PhoneIdentity PhoneProductId="6d3f1ed4-51f9-4ce0-96a0-5f7f948c4f08" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="LearnComposition" Publisher="CN=millfi" Version="1.0.0.0" />
+  <mp:PhoneIdentity PhoneProductId="2a77cc99-42e0-4edf-b96b-081fddeefb1c" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>Learn-Composition.App</DisplayName>
+    <DisplayName>Learn-Composition</DisplayName>
     <PublisherDisplayName>millfi</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -18,10 +18,10 @@
     <Resource Language="en-us" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Windows.ApplicationModel.Core.Application">
       <uap:VisualElements
-        DisplayName="Learn-Composition.App"
-        Description="Learn-Composition.App"
+        DisplayName="Learn-Composition"
+        Description="Learn-Composition"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
