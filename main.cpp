@@ -3,11 +3,11 @@
 #include <winrt/Windows.ApplicationModel.Core.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Numerics.h>
-#include <winrt/Windows.UI.h>
 #include <winrt/Windows.UI.Composition.h>
 #include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.UI.Input.h>
 #include <Windows.h>
-
+//*/
 using namespace winrt;
 
 using namespace Windows::ApplicationModel::Activation;
@@ -36,7 +36,11 @@ struct AppView : implements<AppView, IFrameworkView>
     CoreWindow m_window{ nullptr };
     Compositor m_compositor{ nullptr };
     CompositionTarget m_target{ nullptr };
-    SpriteVisual m_box{ nullptr };
+    SpriteVisual m_box1{ nullptr };
+    SpriteVisual m_box2{ nullptr };
+
+    float3 m_box1Offset{ 40.0f, 80.0f, 0.0f };
+    float3 m_box2Offset{ 40.0f, 260.0f, 0.0f };
 
     bool m_initialized = false;
     bool m_windowClosed = false;
@@ -77,7 +81,8 @@ struct AppView : implements<AppView, IFrameworkView>
 
     void Uninitialize()
     {
-        m_box = nullptr;
+        m_box1 = nullptr;
+        m_box2 = nullptr;
         m_target = nullptr;
         m_compositor = nullptr;
         m_window = nullptr;
@@ -105,40 +110,62 @@ struct AppView : implements<AppView, IFrameworkView>
 
     void OnPointerPressed(
         CoreWindow const&,
-        PointerEventArgs const&)
+        PointerEventArgs const& args)
     {
-        StartAnimation();
+        auto point = args.CurrentPoint().Position();
+        if (HitTest(point, m_box1))
+        {
+            StartAnimation(m_box1, m_box1Offset);
+        }
+        else if (HitTest(point, m_box2))
+        {
+            StartAnimation(m_box2, m_box2Offset);
+        }
+    }
+
+    bool HitTest(Point const& point, SpriteVisual const& box)
+    {
+        if (!box)
+        {
+            return false;
+        }
+        auto offset = box.Offset();
+        auto size = box.Size();
+        return point.X >= offset.x && point.X < offset.x + size.x &&
+               point.Y >= offset.y && point.Y < offset.y + size.y;
     }
 
     void InitComposition()
     {
         try
         {
-            OutputDebugStringW(L"InitComposition: Compositor\n");
             m_compositor = Compositor();
 
             // UWP では HWND ではなく、現在の CoreWindow view に CompositionTarget を作る
-            OutputDebugStringW(L"InitComposition: CreateTargetForCurrentView\n");
             m_target = m_compositor.CreateTargetForCurrentView();
-
-            OutputDebugStringW(L"InitComposition: CreateContainerVisual\n");
             auto root = m_compositor.CreateContainerVisual();
             root.RelativeSizeAdjustment({ 1.0f, 1.0f });
-
-            OutputDebugStringW(L"InitComposition: CreateSpriteVisual\n");
-            m_box = m_compositor.CreateSpriteVisual();
-            m_box.Size({ 140.0f, 140.0f });
-            m_box.Offset({ 40.0f, 80.0f, 0.0f });
-            m_box.Brush(
+            m_box1 = m_compositor.CreateSpriteVisual();
+            m_box1.Size({ 140.0f, 140.0f });
+            m_box1.Offset(m_box1Offset);
+            m_box1.Brush(
                 m_compositor.CreateColorBrush(
-                    Color{ 255, 0, 120, 215 }
+                    Color{ 255, 0, 0, 215 }
                 )
             );
 
-            OutputDebugStringW(L"InitComposition: Root\n");
-            root.Children().InsertAtTop(m_box);
+            m_box2 = m_compositor.CreateSpriteVisual();
+            m_box2.Size({ 140.0f, 140.0f });
+            m_box2.Offset(m_box2Offset);
+            m_box2.Brush(
+                m_compositor.CreateColorBrush(
+                    Color{ 255, 0, 215, 0 }
+                )
+            );
+
+            root.Children().InsertAtTop(m_box1);
+            root.Children().InsertAtTop(m_box2);
             m_target.Root(root);
-            OutputDebugStringW(L"InitComposition: done\n");
         }
         catch (winrt::hresult_error const& e)
         {
@@ -147,11 +174,11 @@ struct AppView : implements<AppView, IFrameworkView>
         }
     }
 
-    void StartAnimation()
+    void StartAnimation(SpriteVisual const& box, float3 const& baseOffset)
     {
         try
         {
-            if (!m_box)
+            if (!box)
             {
                 return;
             }
@@ -163,17 +190,17 @@ struct AppView : implements<AppView, IFrameworkView>
 
             offsetAnimation.InsertKeyFrame(
                 0.0f,
-                float3{ 40.0f, 80.0f, 0.0f }
+                baseOffset
             );
 
             offsetAnimation.InsertKeyFrame(
                 0.5f,
-                float3{ 360.0f, 80.0f, 0.0f }
+                float3{ baseOffset.x + 320.0f, baseOffset.y, 0.0f }
             );
 
             offsetAnimation.InsertKeyFrame(
                 1.0f,
-                float3{ 40.0f, 80.0f, 0.0f }
+                baseOffset
             );
 
             auto opacityAnimation =
@@ -185,8 +212,8 @@ struct AppView : implements<AppView, IFrameworkView>
             opacityAnimation.InsertKeyFrame(0.5f, 0.25f);
             opacityAnimation.InsertKeyFrame(1.0f, 1.0f);
 
-            m_box.StartAnimation(L"Offset", offsetAnimation);
-            m_box.StartAnimation(L"Opacity", opacityAnimation);
+            box.StartAnimation(L"Offset", offsetAnimation);
+            box.StartAnimation(L"Opacity", opacityAnimation);
         }
         catch (winrt::hresult_error const& e)
         {

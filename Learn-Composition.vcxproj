@@ -133,7 +133,6 @@
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.png" />
     <Image Include="Assets\StoreLogo.png" />
-    <Image Include="Assets\SplashScreen.png" />
     <Image Include="Assets\Square44x44Logo.png" />
     <Image Include="Assets\Square150x150Logo.png" />
     <Image Include="Assets\Square71x71Logo.png" />
