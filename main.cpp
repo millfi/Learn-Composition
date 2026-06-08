@@ -1,13 +1,11 @@
-﻿#include <pch.h>
-#include <winrt/Windows.ApplicationModel.Activation.h>
-#include <winrt/Windows.ApplicationModel.Core.h>
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.Foundation.Numerics.h>
-#include <winrt/Windows.UI.Composition.h>
-#include <winrt/Windows.UI.Core.h>
-#include <winrt/Windows.UI.Input.h>
-#include <Windows.h>
-//*/
+﻿#ifndef MAIN_CPP
+#define MAIN_CPP
+
+#include <pch.h>
+
+#include <TextLine.cpp>
+
+#endif
 using namespace winrt;
 
 using namespace Windows::ApplicationModel::Activation;
@@ -36,11 +34,10 @@ struct AppView : implements<AppView, IFrameworkView>
     CoreWindow m_window{ nullptr };
     Compositor m_compositor{ nullptr };
     CompositionTarget m_target{ nullptr };
-    SpriteVisual m_box1{ nullptr };
-    SpriteVisual m_box2{ nullptr };
 
-    float3 m_box1Offset{ 40.0f, 80.0f, 0.0f };
-    float3 m_box2Offset{ 40.0f, 260.0f, 0.0f };
+    
+
+
 
     bool m_initialized = false;
     bool m_windowClosed = false;
@@ -110,16 +107,21 @@ struct AppView : implements<AppView, IFrameworkView>
 
     void OnPointerPressed(
         CoreWindow const&,
-        PointerEventArgs const& args)
+        PointerEventArgs const& args,
+        //アニメーションしたいUI::Compositionの要素
+		Lined_Rect const& boxes
+        )
     {
         auto point = args.CurrentPoint().Position();
-        if (HitTest(point, m_box1))
-        {
-            StartAnimation(m_box1, m_box1Offset);
-        }
-        else if (HitTest(point, m_box2))
-        {
-            StartAnimation(m_box2, m_box2Offset);
+        for (box : boxes.m_boxes) {
+            if (HitTest(point, box))
+            {
+                StartAnimation(box, m_box1Offset);
+            }
+            else if (HitTest(point, box))
+            {
+                StartAnimation(box, m_box2Offset);
+            }
         }
     }
 
@@ -140,31 +142,18 @@ struct AppView : implements<AppView, IFrameworkView>
         try
         {
             m_compositor = Compositor();
-
-            // UWP では HWND ではなく、現在の CoreWindow view に CompositionTarget を作る
             m_target = m_compositor.CreateTargetForCurrentView();
             auto root = m_compositor.CreateContainerVisual();
             root.RelativeSizeAdjustment({ 1.0f, 1.0f });
-            m_box1 = m_compositor.CreateSpriteVisual();
-            m_box1.Size({ 140.0f, 140.0f });
-            m_box1.Offset(m_box1Offset);
-            m_box1.Brush(
-                m_compositor.CreateColorBrush(
-                    Color{ 255, 0, 0, 215 }
-                )
-            );
 
-            m_box2 = m_compositor.CreateSpriteVisual();
-            m_box2.Size({ 140.0f, 140.0f });
-            m_box2.Offset(m_box2Offset);
-            m_box2.Brush(
-                m_compositor.CreateColorBrush(
-                    Color{ 255, 0, 215, 0 }
-                )
-            );
+			vector<float>  boxed_width  = { 200.0f, 300.0f };
+			vector<float>  boxed_height = { 100.0f, 150.0f };
+            vector<float3> boxed_offset = { { 40.0f, 80.0f, 0.0f }, { 40.0f, 260.0f, 0.0f } };
+			Lined_Rect line{ m_compositor, boxed_width, boxed_height, boxed_offset };
+            for(auto l : line.m_boxes){
+                root.Children().InsertAtTop(l);
+			}
 
-            root.Children().InsertAtTop(m_box1);
-            root.Children().InsertAtTop(m_box2);
             m_target.Root(root);
         }
         catch (winrt::hresult_error const& e)
